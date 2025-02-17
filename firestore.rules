@@ -1,0 +1,20 @@
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Match all documents in the "users" collection
+    match /users/{userId} {
+      // Allow read/write if the user is authenticated and is the user in the document
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Match all documents in the "products" collection (can be public)
+    match /products/{productId} {
+      allow read: if true;  // Allow public read access to product data
+      allow write: if false; // No public write access to products
+    }
+
+    // Default rule: Deny all other actions
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
