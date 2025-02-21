@@ -1,6 +1,6 @@
 # Wearify-me
 
-Wearify is a sustainable e-commerce platform designed to promote eco-friendly shopping. Built with **React Native** and **Firebase**, it enables users to explore and track their carbon savings through responsible purchases.  
+Wearify was built as a hackathon project to encourage sustainable shopping habits. However, due to limitations in my skills and React Native, I was unable to fully accomplish the idea. As a result, the project is currently non-functional and inactive, with no ongoing development. It was never intended for real transactions but served as a prototype to explore how technology could drive eco-conscious consumer behavior.
 
 ## Features  
 
@@ -25,24 +25,11 @@ Wearify was built for a **hackathon** to encourage sustainable shopping habits. 
 
 ## Setup & Installation  
 
-1. **Clone the repository:**  
+While the repository exists, Wearify is not being maintained or worked upon. Running the setup might not yield a functional application.
 
-2. **Install dependencies:**
-npm install
+## Contributions:
 
-3. **Set up Firebase:**
-
-4. **Create a Firebase project.**
-
-5. **Enable Firestore and Authentication (Email/Google).**
-
-6. **Copy your Firebase config into a firebase.js file.**
-
-7. **Start the app:**
-
-## Contributing
-
-Pull requests are welcome! If you’d like to contribute, fork the repository and submit a PR.
+As the project is inactive, contributions are not currently being accepted. However, if anyone wishes to build upon this idea, they are welcome to fork the repository and develop it further.
 
 ## License
 
