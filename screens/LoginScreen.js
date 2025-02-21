@@ -1,20 +1,26 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, Text } from 'react-native';
-import { auth } from '../Firebase/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 
 const LoginScreen = ({ navigation }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const auth = getAuth();
 
     const handleLogin = async () => {
         try {
             await signInWithEmailAndPassword(auth, email, password);
-            navigation.navigate('Home');
+            console.log("Login successful for:", email);
+            navigation.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+            });  // Clears navigation history
         } catch (error) {
+            console.error("Login failed:", error.message);
             alert('Login failed. Please check your credentials.');
         }
     };
+
 
     return (
         <View style={{ padding: 10 }}>

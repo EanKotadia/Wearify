@@ -1,115 +1,70 @@
-import React, { useState, useEffect } from 'react';
-import { View, FlatList, Text, ActivityIndicator } from 'react-native';
-import { db, auth } from '../Firebase/firebase';
-import { getDocs, collection, doc, getDoc, setDoc } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
-import ProductCard from '../components/ProductCard';
+import React, { useEffect, useState } from 'react';
+import { View, Text, Button, FlatList, Image, ActivityIndicator, Alert } from 'react-native';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { fetchProducts } from '../Firebase/firebaseService';
 
 const HomeScreen = ({ navigation }) => {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-    const [userCarbonSaved, setUserCarbonSaved] = useState(0);
-
+    const [isAdmin, setIsAdmin] = useState(false);
+    const auth = getAuth();
     useEffect(() => {
-        const fetchProducts = async () => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                navigation.navigate("Login");
+
+                return;
+            }
+
+            console.log("User logged in:", user.email);
+
             try {
-                const productSnapshot = await getDocs(collection(db, 'products'));
-                console.log('Fetched products:', productSnapshot.docs.length);
-
-                if (productSnapshot.empty) {
-                    setError('No products available.');
-                    setLoading(false);
-                    return;
-                }
-
-                const productList = productSnapshot.docs.map((doc) => ({
-                    id: doc.id,
-                    ...doc.data(),
-                }));
-
-                console.log('Mapped products:', productList);
-                setProducts(productList);
-                setLoading(false);
+                const fetchedProducts = await fetchProducts();
+                console.log("Products in HomeScreen:", fetchedProducts);
+                setProducts(fetchedProducts);
             } catch (error) {
-                console.error('Error fetching products:', error.message);
-                setError('Error fetching products: ' + error.message);
+                console.error('Error fetching products:', error);
+            } finally {
                 setLoading(false);
             }
-        };
+        });
 
-        fetchProducts();
+        return unsubscribe; // Cleanup listener
     }, []);
 
-    useEffect(() => {
-        const fetchUserCarbonSaved = async () => {
-            const user = getAuth().currentUser;  // Corrected to use getAuth()
-            if (user) {
-                const userRef = doc(db, 'users', user.uid);
-                const userDoc = await getDoc(userRef);
-                if (userDoc.exists()) {
-                    setUserCarbonSaved(userDoc.data().carbonSaved || 0);
-                }
-            }
-        };
-
-        fetchUserCarbonSaved();
-    }, []);
 
     if (loading) {
         return (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator size="large" color="#0000ff" />
-                <Text>Loading products...</Text>
+                <ActivityIndicator size="large" />
+                <Text>Loading Products...</Text>
             </View>
         );
     }
-
-    if (error) {
-        return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <Text style={{ color: 'red' }}>{error}</Text>
-            </View>
-        );
-    }
-
-    const handleAddToProfile = async (carbonSaved) => {
-        try {
-            const user = getAuth().currentUser;  // Corrected to use getAuth()
-            if (!user) {
-                console.log('User not logged in!');
-                return;
-            }
-
-            const userRef = doc(db, 'users', user.uid);
-            const userDoc = await getDoc(userRef);
-            if (userDoc.exists()) {
-                const currentCarbon = userDoc.data().carbonSaved || 0;
-                const newCarbonSaved = currentCarbon + carbonSaved;
-
-                await setDoc(userRef, { carbonSaved: newCarbonSaved }, { merge: true });
-                setUserCarbonSaved(newCarbonSaved);
-                console.log(`Updated carbon saved: ${newCarbonSaved}`);
-            } else {
-                console.log('User document does not exist!');
-            }
-        } catch (error) {
-            console.error('Error updating carbon saved:', error.message);
-        }
-    };
 
     return (
-        <View style={{ flex: 1, padding: 10 }}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>
-                Carbon Saved: {userCarbonSaved} kg
-            </Text>
-            <FlatList
-                data={products}
-                renderItem={({ item }) => (
-                    <ProductCard product={item} onAddToProfile={handleAddToProfile} />
-                )}
-                keyExtractor={(item) => item.id.toString()}
-            />
+        <View style={{ padding: 10 }}>
+            <Text style={{ fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 10 }}>Products</Text>
+
+            {isAdmin && (
+                <Button title="Add Product" onPress={() => navigation.navigate('AddProduct')} />
+            )}
+
+            {products.length === 0 ? (
+                <Text style={{ textAlign: 'center', fontSize: 16, marginTop: 20 }}>No products available.</Text>
+            ) : (
+                <FlatList
+                    data={products}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item }) => (
+                        <View style={{ padding: 10, borderBottomWidth: 1, alignItems: 'center' }}>
+                            <Image source={{ uri: item.imageUrl }} style={{ width: 100, height: 100, marginBottom: 5 }} />
+                            <Text style={{ fontSize: 18, fontWeight: 'bold' }}>{item.name}</Text>
+                            <Text style={{ fontSize: 16, color: 'gray' }}>${item.price}</Text>
+                        </View>
+                    )}
+                />
+            )}
         </View>
     );
 };
